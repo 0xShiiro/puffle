@@ -2,10 +2,40 @@ import Head from "next/head";
 import Image from "next/image";
 import { Inter } from "next/font/google";
 import styles from "@/styles/Home.module.css";
+import { useState } from "react";
+import { NFTStorage, File } from 'nft.storage'
+import fs from 'fs'
+import mime from 'mime'
+import path from 'path'
 
 const inter = Inter({ subsets: ["latin"] });
 
 export default function Home() {
+  const [file, setfile] = useState<File>()
+  const [ipfsurl, setipfsurl] = useState<string>("")
+  const [loading, setloading] = useState<boolean>(false)
+
+  const NFT_STORAGE_KEY = 'ef7a5873.48621c92ee8e42a0b10081e262498f61'
+  async function storeNFT(path: string, name: string, description: string) {
+
+    const image = await fileFromPath(path)
+
+    // create a new NFTStorage client using our API key
+    const nftstorage = new NFTStorage({ token: NFT_STORAGE_KEY })
+
+    // call client.store, passing in the image & metadata
+    return nftstorage.store({
+      image,
+      name,
+      description,
+    })
+  }
+  async function fileFromPath(filePath: string) {
+    const content = await fs.promises.readFile(filePath)
+    const type = mime.getType(filePath)
+    return new File([content], path.basename(filePath || ''))
+  }
+
   return (
     <>
       <Head>
@@ -14,101 +44,26 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className={`${styles.main} ${inter.className}`}>
-        <div className={styles.description}>
-          <p>
-            Get started by editing&nbsp;
-            <code className={styles.code}>src/pages/index.tsx</code>
-          </p>
-          <div>
-            <a
-              href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              By{" "}
-              <Image
-                src="/vercel.svg"
-                alt="Vercel Logo"
-                className={styles.vercelLogo}
-                width={100}
-                height={24}
-                priority
-              />
-            </a>
-          </div>
-        </div>
+      <h1 className={styles.title}>Weclome to Nft minter !!</h1>
+      <input type="file" accept="image/*" onChange={(e) => {
+        setfile(e.target.files?.[0]);
 
-        <div className={styles.center}>
-          <Image
-            className={styles.logo}
-            src="/next.svg"
-            alt="Next.js Logo"
-            width={180}
-            height={37}
-            priority
-          />
-        </div>
+      }} />
+      <div className={styles.button} onClick={async (e) => {
+        setloading(true)
+        const result = await storeNFT(file?.webkitRelativePath || '', 'NFT', 'NFT')
+        setloading(false)
+        setipfsurl(result.url)
 
-        <div className={styles.grid}>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2>
-              Docs <span>-&gt;</span>
-            </h2>
-            <p>
-              Find in-depth information about Next.js features and&nbsp;API.
-            </p>
-          </a>
+      }}>
+        {loading ? <div className={styles.ldsdualring}></div> : <div>NFT minted successfully</div>}
+        console.log(ipfsurl)
 
-          <a
-            href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2>
-              Learn <span>-&gt;</span>
-            </h2>
-            <p>
-              Learn about Next.js in an interactive course with&nbsp;quizzes!
-            </p>
-          </a>
+        <button>
+          Mint NFT
 
-          <a
-            href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2>
-              Templates <span>-&gt;</span>
-            </h2>
-            <p>
-              Discover and deploy boilerplate example Next.js&nbsp;projects.
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2>
-              Deploy <span>-&gt;</span>
-            </h2>
-            <p>
-              Instantly deploy your Next.js site to a shareable URL
-              with&nbsp;Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
+        </button>
+      </div>
     </>
   );
 }
