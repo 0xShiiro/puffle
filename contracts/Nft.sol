@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.10;
 
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "../lib/openzeppelin-contracts/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "../lib/openzeppelin-contracts/contracts/access/Ownable.sol";
+import {Base64} from "../lib/openzeppelin-contracts/contracts/utils/Base64.sol";
+
 
 contract MyNFT is ERC721Enumerable, Ownable {
-    using Strings for uint256;
+    
 
     uint256 public constant MAX_SUPPLY = 10;
     uint256 public constant MINT_PRICE = 0.01 ether;
@@ -14,7 +16,7 @@ contract MyNFT is ERC721Enumerable, Ownable {
     string private imageURI;
 
     constructor() ERC721("MyNFT", "MNFT") Ownable(msg.sender) {
-        baseTokenURI = "data:application/json;base64,";
+       baseTokenURI="data:application/json;base64,";
     }
 
     function _baseURI() internal view virtual override returns (string memory) {
@@ -56,32 +58,26 @@ contract MyNFT is ERC721Enumerable, Ownable {
 
     function setimageUrl(string memory _newImageUrl) public onlyOwner {
         imageURI = _newImageUrl;
-    }
+    }   
 
-    function tokenURI(
-        uint256 tokenId
-    ) public view virtual override returns (string memory) {
-        if (ownerOf(tokenId) == address(0)) {
-            revert ERC721Metadata__URI_QueryFor_NonExistentToken();
-        }
-
-        return
-            string(
-                abi.encodePacked(
-                    baseTokenURI,
-                    Base64.encode(
-                        bytes( // bytes casting actually unnecessary as 'abi.encodePacked()' returns a bytes
-                            abi.encodePacked(
-                                '{"name":"',
-                                name(), // You can add whatever name here
-                                '", "description":"An NFT that reflects the mood of the owner, 100% on Chain!", ',
-                                '"attributes": [{"trait_type": "moodiness", "value": 100}], "image":"',
-                                imageURI,
-                                '"}'
-                            )
+    function tokenURI() public view virtual returns (string memory) {
+   
+        return string(
+            abi.encodePacked(
+                baseTokenURI,
+                Base64.encode(
+                    bytes( // bytes casting actually unnecessary as 'abi.encodePacked()' returns a bytes
+                        abi.encodePacked(
+                            '{"name":"',
+                            name(), // You can add whatever name here
+                            '", "description":"An NFT that reflects the mood of the owner, 100% on Chain!", ',
+                            '"attributes": [{"trait_type": "moodiness", "value": 100}], "image":"',
+                            imageURI,
+                            '"}'
                         )
                     )
                 )
-            );
+            )
+        );
     }
 }

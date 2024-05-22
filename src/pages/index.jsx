@@ -4,19 +4,19 @@ import { Inter } from "next/font/google";
 import styles from "@/styles/Home.module.css";
 import { useState } from "react";
 import { NFTStorage, File } from 'nft.storage'
-import fs from 'fs'
+
 import mime from 'mime'
 import path from 'path'
 
 const inter = Inter({ subsets: ["latin"] });
 
 export default function Home() {
-  const [file, setfile] = useState<File>()
-  const [ipfsurl, setipfsurl] = useState<string>("")
-  const [loading, setloading] = useState<boolean>(false)
+  const [file, setfile] = useState()
+  const [ipfsurl, setipfsurl] = useState("")
+  const [loading, setloading] = useState(false)
 
   const NFT_STORAGE_KEY = 'ef7a5873.48621c92ee8e42a0b10081e262498f61'
-  async function storeNFT(path: string, name: string, description: string) {
+  async function storeNFT(path, name, description) {
 
     const image = await fileFromPath(path)
 
@@ -30,10 +30,14 @@ export default function Home() {
       description,
     })
   }
-  async function fileFromPath(filePath: string) {
-    const content = await fs.promises.readFile(filePath)
-    const type = mime.getType(filePath)
-    return new File([content], path.basename(filePath || ''))
+  async function fileFromPath(filePath) {
+    let fs;
+    if (typeof window === 'undefined') {
+      fs = require('fs');
+      const content = await fs.promises.readFile(filePath)
+      const type = mime.getType(filePath)
+      return new File([content], path.basename(filePath || ''))
+    }
   }
 
   return (
@@ -59,7 +63,7 @@ export default function Home() {
         {loading ? <div className={styles.ldsdualring}></div> : <div>NFT minted successfully</div>}
         console.log(ipfsurl)
 
-        <button>
+        <button className={styles.button}>
           Mint NFT
 
         </button>
